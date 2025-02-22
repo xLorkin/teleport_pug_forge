@@ -2,6 +2,7 @@ package de.devpug.teleportpugmod.items;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -16,18 +17,22 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LavaCauldronBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 public class TeleportPugItem extends Item {
 
 	public static final int DURABILITY = 32;
 	
-	private static final Double MAX_PLANE_DISTINCE_TO_PLAYER = 256.0;
-	private static final Double MAX_HEIGHT_DISTANCE_TO_PLAYER = 64.0;
-	private static final long MIN_COOLDOWN_MILLISECONDS = 5000;
+	private static final Double MAX_PLANE_DISTANCE_TO_PLAYER = 512.0;
+	private static final Double MAX_HEIGHT_DISTANCE_TO_PLAYER = 100.0;
+	private static final long COOLDOWN_MILLISECONDS = 5000;
 	
-	private long lastTeleportTimePlayer = 0;
-	private long lastTeleportTimeServer = 0;
+	private long lastUseTimePlayer = 0;
+	private long lastUseTimeServer = 0;
 	
 
 	public TeleportPugItem(Properties pProperties) {
@@ -38,28 +43,21 @@ public class TeleportPugItem extends Item {
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand interactionHand) {
     	
-    	System.out.println("isClientSide: " + level.isClientSide());
     	
-    	long currentTime = System.currentTimeMillis();
-
-
-    	
-//		TODO: prevent player from spamming. Only allow use if teleport has finished
-
-
+    	long useTime = System.currentTimeMillis();
+//		prevent player from spamming. Only allow use if teleport has finished
 		if(level.isClientSide()) {
-	    	long differenceTimePlayer = currentTime - lastTeleportTimePlayer;
-	    	System.out.println("differenceTimePlayer: " + differenceTimePlayer);
-			if(differenceTimePlayer < MIN_COOLDOWN_MILLISECONDS) {
+	    	long differenceUseTimePlayer = useTime - lastUseTimePlayer;
+			if(differenceUseTimePlayer < COOLDOWN_MILLISECONDS) {
+				logMessage("Cooldown...", player);
 				return InteractionResult.FAIL;
 			}
-			lastTeleportTimePlayer = currentTime;
+			lastUseTimePlayer = useTime;
 			return InteractionResult.SUCCESS;
 		}
 		
-    	long differenceTimeServer = currentTime - lastTeleportTimeServer;
-    	System.out.println("differenceTimeServer: " + differenceTimeServer);
-		if(differenceTimeServer < MIN_COOLDOWN_MILLISECONDS) {
+    	long differenceUseTimeServer = useTime - lastUseTimeServer;
+		if(differenceUseTimeServer < COOLDOWN_MILLISECONDS) {
 			playSoundFail(level, player);
 			return InteractionResult.FAIL;
 		}
@@ -70,13 +68,24 @@ public class TeleportPugItem extends Item {
 //		System.out.println("Item ID: " + Item.getId(this));
 //		System.out.println("Description ID: " + getDescriptionId());
 		
+		logMessage("Loading random position...", player);
 		playSoundCharge(level, player);
-		BlockPos blockPos = findRandomPlaceAndTeleport(level, player);
-		playSoundTeleport(level, blockPos);
-		hurtDurability(level, player, interactionHand);
-		lastTeleportTimeServer = currentTime;
-    	
-        return InteractionResult.SUCCESS;
+		BlockPos blockPos = findRandomPlaceAndTeleport(level, player, useTime);
+		if(blockPos == null) {
+//			fail
+    		playSoundFail(level, player);
+    		lastUseTimeServer = 0;
+    		lastUseTimePlayer = 0;
+    		return InteractionResult.FAIL;
+		}else {
+//			success
+			playSoundTeleport(level, blockPos);
+			hurtDurability(level, player, interactionHand);
+			lastUseTimeServer = useTime;
+			lastUseTimePlayer = useTime;
+	        return InteractionResult.SUCCESS;
+		}
+
     }
 
 	private void hurtDurability(Level level, Player player, InteractionHand interactionHand) {
@@ -96,76 +105,108 @@ public class TeleportPugItem extends Item {
 	}
 
 
-	private BlockPos findRandomPlaceAndTeleport(Level level, Player player) {
-		RandomSource randomSource = RandomSource.create();
-
-long startTime = System.currentTimeMillis();
+	private BlockPos findRandomPlaceAndTeleport(Level level, Player player, long useTime) {
 		
-        Vec3 playerPosition = player.getPosition(DEFAULT_MAX_STACK_SIZE);
+
+		
+        Vec3 playerPosition = player.getPosition(16);
         Vec3 targetPosition = playerPosition;
         BlockPos blockPos;
         
-        boolean targetCoordinatesAreInAir = false;
-        boolean targetCoordinateBelowIsGround = false;
-//        boolean possibleRespawnPoint = false;
-
-        long counterLoops = 0l;
+        boolean targetBlockIsSafe = false;
+        boolean targetGroundIsSafe = false;
+        
         do
         {
-//            counterLoops++;
-//            System.out.println("Loops: " + counterLoops);
+        	long differenceTimeLoop = System.currentTimeMillis() - useTime;
+//        	System.out.println("differenceTimeLoop: " + differenceTimeLoop);
+    		if(differenceTimeLoop >= COOLDOWN_MILLISECONDS) {
+        		logMessage("Teleport failed, took > " + COOLDOWN_MILLISECONDS + "ms", player );
+        		return null;
+        	}
             
-        	Double generatedX = Mth.nextDouble(randomSource, playerPosition.x - MAX_PLANE_DISTINCE_TO_PLAYER, playerPosition.x + MAX_PLANE_DISTINCE_TO_PLAYER);
-            Double generatedY = Mth.nextDouble(randomSource, playerPosition.y - MAX_HEIGHT_DISTANCE_TO_PLAYER, playerPosition.y + MAX_HEIGHT_DISTANCE_TO_PLAYER);
-            Double generatedZ = Mth.nextDouble(randomSource, playerPosition.z - MAX_PLANE_DISTINCE_TO_PLAYER, playerPosition.z + MAX_PLANE_DISTINCE_TO_PLAYER);
+//        	RandomSource randomSource = RandomSource.create();
+        	Double generatedX = Mth.nextDouble(RandomSource.create(), playerPosition.x - MAX_PLANE_DISTANCE_TO_PLAYER, playerPosition.x + MAX_PLANE_DISTANCE_TO_PLAYER);
+            Double generatedY = Mth.nextDouble(RandomSource.create(), playerPosition.y - MAX_HEIGHT_DISTANCE_TO_PLAYER, playerPosition.y + MAX_HEIGHT_DISTANCE_TO_PLAYER);
+            Double generatedZ = Mth.nextDouble(RandomSource.create(), playerPosition.z - MAX_PLANE_DISTANCE_TO_PLAYER, playerPosition.z + MAX_PLANE_DISTANCE_TO_PLAYER);
             
             blockPos = BlockPos.containing(generatedX , generatedY , generatedZ );
-            BlockPos blockBelowPos = BlockPos.containing(generatedX , generatedY-1.0 , generatedZ );
-            
-            boolean blockPosIsWater = false;
-            boolean blockBelowPosIsWater = false;
-            
-//            if(level.getBlockEntity(blockPos) != null && level.getBlockEntity(blockPos).getBlockState() != null && level.getBlockEntity(blockPos).getBlockState().getBlock() != null) {
-//            	blockPosIsWater = Blocks.WATER.equals(level.getBlockEntity(blockPos).getBlockState().getBlock());
-//            }
-//            
-//            if(level.getBlockEntity(blockBelowPos) != null && level.getBlockEntity(blockBelowPos).getBlockState() != null && level.getBlockEntity(blockBelowPos).getBlockState().getBlock() != null) {
-//            	blockBelowPosIsWater = Blocks.WATER.equals(level.getBlockEntity(blockBelowPos).getBlockState().getBlock());
-//            }
-//            
-            targetCoordinatesAreInAir = level.isEmptyBlock(blockPos) || blockPosIsWater;
-            if(!targetCoordinatesAreInAir) {
+     
+
+            targetBlockIsSafe = isSafeTargetBlock(blockPos, level, true);
+            if(!targetBlockIsSafe) {
             	continue;
             }
             
-            targetCoordinateBelowIsGround = !level.isEmptyBlock(blockBelowPos) || blockBelowPosIsWater;
-			if(!targetCoordinateBelowIsGround) {
-				continue;
-			}
+            BlockPos blockBelowPos = blockPos.below();
+            targetGroundIsSafe = isSafeGroundBlock(blockBelowPos, level, 1);	
             
-			targetPosition = blockPos.getCenter();
-//            boolean blockBelowIsLava = Blocks.LAVA.equals(world.getBlockEntity(blockBelowPos).getBlockState().getBlock());
-//            if(blockBelowIsLava) {
-//            	continue;
-//            }
-            
-            
-//        	BlockPos blockPosBelow = BlockPos.containing(generatedX , generatedY-1.0 , generatedZ );
-//        	BlockState blockBelowState = world.getBlockState(blockPosBelow);
-//        	Block blockBelow = blockBelowState.getBlock();
-     
-            
-
-            
-        }while (!targetCoordinatesAreInAir || !targetCoordinateBelowIsGround );
+           
+        }while (!targetBlockIsSafe || !targetGroundIsSafe );
+        
+        targetPosition = blockPos.getBottomCenter();
         
         player.teleportTo(targetPosition.x(), targetPosition.y(), targetPosition.z());
+//        player.randomTeleport(targetPosition.x(), targetPosition.y(), targetPosition.z(), true);
         
-        long differenceTime = System.currentTimeMillis() - startTime;
-        System.out.println("Player: " + player.getName().getString() + " took " + differenceTime + "ms to teleport" );
+        long differenceTime = System.currentTimeMillis() - useTime;
+        logMessage("Teleported to: " + blockPos.toShortString() + " in " + differenceTime + "ms ", player);
         
         return blockPos;
-        
+	}
+	
+	private void logMessage(String msg, Player player) {
+//		TODO: use logger?
+		System.out.println(msg);
+		player.displayClientMessage(Component.literal(msg), true);
+	}
+
+
+	private boolean isSafeTargetBlock(BlockPos blockPos, Level level, boolean countWaterAsSafeTarget) {
+		if(blockPos == null) {
+			return false;
+		}
+		boolean targetBlockIsSafe = level.getBlockState(blockPos).getBlock().equals(Blocks.AIR);
+		if(targetBlockIsSafe) {
+			return targetBlockIsSafe;
+		}
+		
+		if(countWaterAsSafeTarget) {
+			BlockState blockState = level.getBlockState(blockPos);
+			if(blockState != null) {
+				Block block = blockState.getBlock();
+				if(block != null) {
+					if(block.equals(Blocks.WATER)){
+						targetBlockIsSafe = true;
+			  		}
+			  	}
+			}
+		}
+		
+		return targetBlockIsSafe;
+	}
+	
+	private boolean isSafeGroundBlock(BlockPos blockPos, Level level, int countBelow) {
+
+//		System.out.println("countBelow: " + countBelow);
+		
+//		this block is too high up, player could take fall damage
+		if(countBelow >= 3) {
+			return false;
+		}
+		BlockState blockState = level.getBlockState(blockPos);
+		Block block = blockState.getBlock();
+		if(block.equals(Blocks.LAVA) || block.equals(Blocks.CACTUS)){
+//			ground should not be lava or cactus
+			return false;
+		}
+		if(block.equals(Blocks.AIR)) {
+//			if this groundBlock is empty, check up to 2 more blocks below
+			countBelow++;
+			return isSafeGroundBlock(blockPos.below(), level, countBelow);
+  		}
+
+		return true;
 	}
 
 }
