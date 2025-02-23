@@ -19,7 +19,7 @@ public class ModItems {
 	
     
     public static final RegistryObject<Item> TELEPORT_PUG = ITEMS.register("teleportpug",
-            () -> new TeleportPugItem(new Item.Properties().setId(ITEMS.key("teleportpug")).durability(TeleportPugItem.DURABILITY))
+            () -> new TeleportPugItem(new Item.Properties().setId(ITEMS.key("teleportpug")))
         );
     
     public static final RegistryObject<Item> TELEPORT_PUG2 = ITEMS.register("teleportpug2",

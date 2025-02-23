@@ -25,8 +25,7 @@ import net.minecraft.world.phys.Vec3;
 
 public class TeleportPugItem extends Item {
 
-	public static final int DURABILITY = 32;
-	
+	private static final int DURABILITY = 32;
 	private static final Double MAX_PLANE_DISTANCE_TO_PLAYER = 512.0;
 	private static final Double MAX_HEIGHT_DISTANCE_TO_PLAYER = 100.0;
 	private static final long COOLDOWN_MILLISECONDS = 5000;
@@ -36,7 +35,7 @@ public class TeleportPugItem extends Item {
 	
 
 	public TeleportPugItem(Properties pProperties) {
-		super(pProperties);
+		super(pProperties.durability(DURABILITY));
 	}
 	
 	
