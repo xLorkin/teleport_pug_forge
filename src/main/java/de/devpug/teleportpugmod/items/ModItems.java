@@ -22,10 +22,6 @@ public class ModItems {
             () -> new TeleportPugItem(new Item.Properties().setId(ITEMS.key("teleportpug")))
         );
     
-    public static final RegistryObject<Item> TELEPORT_PUG2 = ITEMS.register("teleportpug2",
-            () -> new Item(new Item.Properties().setId(ITEMS.key("teleportpug2")))
-        );
-    
 //    public static final RegistryObject<Item> RANDOM_TELEPORT_PUG = ITEMS.register("teleportpug",
 //            () -> new RandomTeleportPugItem(new Item.Properties().setId(ResourceKey.create(ForgeRegistries.ITEMS.getRegistryKey(), ResourceLocation.fromNamespaceAndPath(TeleportPugMod.MOD_ID, "teleportpug"))))
 //        );

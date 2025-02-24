@@ -3,11 +3,17 @@ package de.devpug.teleportpugmod;
 import com.mojang.logging.LogUtils;
 
 import de.devpug.teleportpugmod.items.ModItems;
+import net.minecraft.client.data.models.ModelProvider;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.data.CachedOutput;
+import net.minecraft.data.DataGenerator;
+import net.minecraft.data.DataProvider;
+import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
@@ -16,6 +22,10 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 
@@ -52,10 +62,22 @@ public class TeleportPugMod {
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
+        
+//        TODO PAU: DataGenerator!
+//        modEventBus.addListener(this::addDataGenerator);
 
         // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
         context.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }    
+    
+    
+    private void addDataGenerator(GatherDataEvent event) {
+    	System.out.println("ADD DATA GENERATOR");
+    	ModelProvider modelProvider = new ModelProvider(new PackOutput(Paths.get(MOD_ID + ":items")));
+    	
+    	event.getGenerator().addProvider(true, modelProvider);
+    	
+    }
     
     private void commonSetup(final FMLCommonSetupEvent event) {
 
@@ -70,9 +92,8 @@ public class TeleportPugMod {
 
     // Add the example block item to the building blocks tab
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {
+        if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(ModItems.TELEPORT_PUG);
-            event.accept(ModItems.TELEPORT_PUG2);
         }
 
     }
