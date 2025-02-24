@@ -94,7 +94,8 @@ public class TeleportPugMod {
     // Add the example block item to the building blocks tab
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
-            event.accept(ModItems.TELEPORT_PUG);
+            event.accept(ModItems.TELEPORT_RANDOM_PUG);
+            event.accept(ModItems.TELEPORT_RESPAWN_PUG);
         }
 
     }

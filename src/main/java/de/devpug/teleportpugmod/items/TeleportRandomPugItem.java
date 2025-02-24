@@ -23,7 +23,7 @@ import net.minecraft.world.level.block.LavaCauldronBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-public class TeleportPugItem extends Item {
+public class TeleportRandomPugItem extends Item {
 
 	private static final int DURABILITY = 32;
 	private static final Double MAX_PLANE_DISTANCE_TO_PLAYER = 512.0;
@@ -34,7 +34,7 @@ public class TeleportPugItem extends Item {
 	private long lastUseTimeServer = 0;
 	
 
-	public TeleportPugItem(Properties pProperties) {
+	public TeleportRandomPugItem(Properties pProperties) {
 		super(pProperties.durability(DURABILITY));
 	}
 	
@@ -60,12 +60,6 @@ public class TeleportPugItem extends Item {
 			playSoundFail(level, player);
 			return InteractionResult.FAIL;
 		}
-
-		
-//		ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(TeleportPugMod.MOD_ID, "teleportpug"));
-//		System.out.println("ResourceKey: " + key.toString());
-//		System.out.println("Item ID: " + Item.getId(this));
-//		System.out.println("Description ID: " + getDescriptionId());
 		
 		logMessage("Loading random position...", player);
 		playSoundCharge(level, player);

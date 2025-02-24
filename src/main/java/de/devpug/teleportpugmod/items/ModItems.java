@@ -18,8 +18,12 @@ public class ModItems {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, TeleportPugMod.MOD_ID);
 	
     
-    public static final RegistryObject<Item> TELEPORT_PUG = ITEMS.register("teleportpug",
-            () -> new TeleportPugItem(new Item.Properties().setId(ITEMS.key("teleportpug")))
+    public static final RegistryObject<Item> TELEPORT_RANDOM_PUG = ITEMS.register("teleportrandompug",
+            () -> new TeleportRandomPugItem(new Item.Properties().setId(ITEMS.key("teleportrandompug")))
+        );
+    
+    public static final RegistryObject<Item> TELEPORT_RESPAWN_PUG = ITEMS.register("teleportrespawnpug",
+            () -> new TeleportRespawnPugItem(new Item.Properties().setId(ITEMS.key("teleportrespawnpug")))
         );
     
 //    public static final RegistryObject<Item> RANDOM_TELEPORT_PUG = ITEMS.register("teleportpug",
