@@ -2,6 +2,7 @@ package de.devpug.teleportpugmod;
  
 import com.mojang.logging.LogUtils;
 
+import de.devpug.teleportpugmod.blocks.ModBlocks;
 import de.devpug.teleportpugmod.items.ModItems;
 import net.minecraft.client.data.models.ModelProvider;
 import net.minecraft.core.registries.Registries;
