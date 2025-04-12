@@ -96,6 +96,8 @@ public class TeleportPugMod {
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(ModItems.TELEPORT_RANDOM_PUG);
             event.accept(ModItems.TELEPORT_RESPAWN_PUG);
+            event.accept(ModItems.BROADSWORD1);
+            event.accept(ModItems.BUSTERSWORD1);
         }
 
     }

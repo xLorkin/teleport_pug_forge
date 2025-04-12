@@ -5,6 +5,9 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.ToolMaterial;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.DeferredRegister;
@@ -24,6 +27,14 @@ public class ModItems {
     
     public static final RegistryObject<Item> TELEPORT_RESPAWN_PUG = ITEMS.register("teleportrespawnpug",
             () -> new TeleportRespawnPugItem(new Item.Properties().setId(ITEMS.key("teleportrespawnpug")))
+        );
+    
+    public static final RegistryObject<Item> BROADSWORD1 = ITEMS.register("broadsword1",
+            () -> new SwordItem(ToolMaterial.IRON, 6.0f, 1.0f, new Item.Properties().setId(ITEMS.key("broadsword1")).rarity(Rarity.EPIC))
+        );
+    
+    public static final RegistryObject<Item> BUSTERSWORD1 = ITEMS.register("bustersword1",
+            () -> new SwordItem(ToolMaterial.IRON, 6.0f, 2.0f, new Item.Properties().setId(ITEMS.key("bustersword1")).rarity(Rarity.EPIC))
         );
     
 //    public static final RegistryObject<Item> RANDOM_TELEPORT_PUG = ITEMS.register("teleportpug",

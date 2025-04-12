@@ -1,0 +1,6 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+	"layer0": "teleportpugmod:item/16p_broadsword1"
+  }
+}
